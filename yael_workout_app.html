@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>YAEL — Peak Performance</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #2d3f55;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --green: #4ade80;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding-bottom: 120px;
+}
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+
+/* HEADER */
+.app-header {
+  background: var(--surface);
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--surface2);
+}
+.app-header h1 { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+.week-badge {
+  background: var(--surface2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.card-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+.card-sub { color: var(--muted); font-size: 0.85rem; }
+
+/* PHASE BANNER */
+.phase-banner {
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+}
+.phase-banner.acc { background: rgba(56,189,248,0.1); border-left: 3px solid var(--accent); }
+.phase-banner.int { background: rgba(251,191,36,0.1); border-left: 3px solid var(--yellow); }
+.phase-banner.rea { background: rgba(248,113,113,0.1); border-left: 3px solid var(--red); }
+.phase-banner.del { background: rgba(74,222,128,0.1); border-left: 3px solid var(--green); }
+.phase-banner b { display: block; margin-bottom: 4px; }
+
+/* EXERCISE CARD */
+.ex-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.ex-header {
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ex-header:hover { background: var(--surface2); }
+.ex-name { font-weight: 600; font-size: 0.95rem; }
+.ex-meta { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+.ex-warning { color: #f87171; font-size: 0.8rem; margin-top: 4px; }
+.ex-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--surface2); }
+.ex-body.open { display: block; }
+
+/* SET ROW */
+.set-row {
+  display: grid;
+  grid-template-columns: 30px 1fr 1fr 80px;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+.set-num { color: var(--muted); font-size: 0.85rem; text-align: center; }
+.set-row input, .set-row select {
+  background: var(--surface2);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  padding: 7px 8px;
+  font-size: 0.85rem;
+  width: 100%;
+}
+.set-row input:focus, .set-row select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.set-prev { color: var(--muted); font-size: 0.75rem; margin-top: 2px; text-align: center; }
+.rest-btn {
+  background: var(--surface2);
+  border: none;
+  border-radius: 8px;
+  color: var(--accent);
+  padding: 7px 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  width: 100%;
+}
+.rest-btn:hover { background: var(--accent); color: white; }
+
+/* GIF DEMO */
+.demo-toggle {
+  background: none;
+  border: 1px solid var(--surface2);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+}
+.demo-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.demo-box { display: none; margin-top: 8px; text-align: center; }
+.demo-box.open { display: block; }
+.demo-box img { width: 100%; border-radius: 8px; max-height: 200px; object-fit: cover; }
+.demo-box a {
+  display: block;
+  margin-top: 6px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+/* TIMER */
+#timer-bar {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--red);
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  z-index: 200;
+  font-weight: 600;
+}
+#timer-bar.active { display: flex; }
+.timer-controls { display: flex; gap: 8px; }
+.timer-controls button {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--surface);
+  display: flex;
+  border-top: 1px solid var(--surface2);
+  z-index: 300;
+}
+.nav-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 10px 4px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: color 0.2s;
+}
+.nav-btn.active { color: var(--accent); }
+.nav-btn span:first-child { font-size: 1.3rem; }
+
+/* BUTTONS */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: var(--accent); color: #0f172a; }
+.btn-success { background: var(--green); color: #0f172a; }
+.btn-danger { background: var(--red); color: white; }
+.btn-outline {
+  background: none;
+  border: 1px solid var(--surface2);
+  color: var(--muted);
+}
+
+/* CHECKIN */
+.checkin-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface2);
+}
+.checkin-row:last-child { border-bottom: none; }
+.checkin-label { font-size: 0.9rem; }
+.emoji-group { display: flex; gap: 6px; }
+.emoji-btn {
+  background: var(--surface2);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.15s;
+}
+.emoji-btn.selected { border-color: var(--accent); background: rgba(56,189,248,0.15); }
+
+/* NOTES */
+.notes-area {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 10px;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 80px;
+  margin-top: 8px;
+}
+.notes-area:focus { outline: none; border-color: var(--accent); }
+
+/* HISTORY */
+.hist-item {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.hist-header { display: flex; justify-content: space-between; align-items: center; }
+.hist-day { font-weight: 600; }
+.hist-date { color: var(--muted); font-size: 0.8rem; }
+.hist-stats { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.hist-stat { background: var(--surface2); padding: 3px 8px; border-radius: 6px; font-size: 0.78rem; color: var(--muted); }
+.hist-rpe { color: var(--yellow); }
+
+/* CALENDAR */
+.cal-week {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.cal-week-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.cal-week-title { font-weight: 600; }
+.cal-phase-tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.tag-acc { background: rgba(56,189,248,0.2); color: var(--accent); }
+.tag-int { background: rgba(251,191,36,0.2); color: var(--yellow); }
+.tag-rea { background: rgba(248,113,113,0.2); color: var(--red); }
+.tag-del { background: rgba(74,222,128,0.2); color: var(--green); }
+.cal-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.cal-day {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 6px 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.cal-day.done { background: rgba(74,222,128,0.15); border: 1px solid var(--green); }
+.cal-day.current { border: 1px solid var(--accent); }
+.cal-day-name { color: var(--muted); font-size: 0.7rem; }
+.cal-day-rpe { color: var(--yellow); font-size: 0.7rem; margin-top: 2px; }
+
+/* PROGRESS */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat-box {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+.stat-val { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+.stat-label { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+canvas { width: 100% !important; border-radius: var(--radius); background: var(--surface); }
+
+/* SECTION TITLE */
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 16px 0 8px;
+}
+
+/* WEEK NAV */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.week-nav button {
+  background: var(--surface2);
+  border: none;
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.week-nav button:hover { background: var(--accent); color: #0f172a; }
+.week-nav-info { text-align: center; }
+.week-nav-info .wn-week { font-weight: 700; font-size: 1.1rem; }
+.week-nav-info .wn-phase { color: var(--muted); font-size: 0.8rem; }
+
+/* STREAK */
+.streak-bar {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.streak-fire { font-size: 1.5rem; }
+.streak-val { font-size: 1.2rem; font-weight: 700; color: var(--yellow); }
+.streak-label { color: var(--muted); font-size: 0.8rem; }
+
+/* MEDICAL WARNING */
+.med-warning {
+  background: rgba(248,113,113,0.1);
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  color: #fca5a5;
+}
+.med-warning b { color: var(--red); display: block; margin-bottom: 4px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <h1>⚡ YAEL</h1>
+  <div class="week-badge" id="header-badge">Week 1 · Accumulation</div>
+</div>
+
+<!-- SCREENS -->
+<div id="screen-home" class="screen active"></div>
+<div id="screen-workout" class="screen"></div>
+<div id="screen-history" class="screen"></div>
+<div id="screen-calendar" class="screen"></div>
+<div id="screen-progress" class="screen"></div>
+
+<!-- TIMER BAR -->
+<div id="timer-bar">
+  <span id="timer-text">Rest: 60s</span>
+  <div class="timer-controls">
+    <button onclick="timerAdj(-15)">-15</button>
+    <button onclick="timerAdj(15)">+15</button>
+    <button onclick="timerStop()">✕</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="nav('home')">
+    <span>🏠</span><span>Home</span>
+  </button>
+  <button class="nav-btn" id="nav-calendar" onclick="nav('calendar')">
+    <span>📅</span><span>Calendar</span>
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="nav('history')">
+    <span>📋</span><span>History</span>
+  </button>
+  <button class="nav-btn" id="nav-progress" onclick="nav('progress')">
+    <span>📈</span><span>Progress</span>
+  </button>
+</div>
+
+<script>
+// ============================================================
+// DATA — PROGRAM
+// ============================================================
+const PHASES = [
+  { weeks:[1,2,3,4], name:"Accumulation", cls:"acc", rpe:"6-7",
+    desc:"High volume, moderate intensity (65-75% 1RM). Build work capacity, master technique, establish movement patterns. Add +2.5kg each week on main lifts.",
+    tip:"Technique first. If form breaks — reduce weight. Volume is the stimulus here." },
+  { weeks:[5,6,7,8], name:"Intensification", cls:"int", rpe:"7-8",
+    desc:"Moderate volume, higher intensity (75-85% 1RM). Volume drops ~20%, load increases. Neural adaptations begin. Add +2.5-5kg vs Accumulation.",
+    tip:"Each set should feel challenging but controlled. Rest fully between sets." },
+  { weeks:[9,10,11], name:"Realization", cls:"rea", rpe:"8-9",
+    desc:"Low volume, high intensity (85-92% 1RM). Express the strength built. Fewer sets, heavier loads, full recovery between sets.",
+    tip:"This is the peak. Push hard on main lifts. Accessories are secondary." },
+  { weeks:[12], name:"Deload", cls:"del", rpe:"5-6",
+    desc:"Active recovery. Volume -50%, intensity -30%. Maintain movement quality, flush fatigue, prepare for next cycle.",
+    tip:"Do NOT skip deload. It is where adaptation consolidates. Light and perfect." }
+];
+
+function getPhase(w) {
+  return PHASES.find(p => p.weeks.includes(w)) || PHASES[0];
+}
+
+// Sets/reps per phase per exercise
+// Format: { acc:[sets,reps], int:[sets,reps], rea:[sets,reps], del:[sets,reps] }
+const DAYS = [
+  // ═══════════════════════════════════════════════════════
+  // DAY 1 — LOWER A: Hip-Dominant + Ankle Rehab
+  // Key changes: Goblet Squat replaces Front Squat (ankle-safe)
+  // Added: Tibialis Anterior Raise, Single-Leg Balance (deltoid ligament protocol)
+  // ═══════════════════════════════════════════════════════
+  {
+    id: "lowerA",
+    name: "Lower A",
+    subtitle: "Hip-dominant + Ankle Rehab",
+    warmup: "⚠️ ANKLE PROTOCOL: Ankle circles 2×20 each direction → Tibialis raises 2×15 → Single-leg balance 30s each → Calf stretch 30s → Hip circles → Bodyweight RDL 10 reps (8-10 min)",
+    exercises: [
+      {
+        name: "Romanian Deadlift (RDL)",
+        phases: { acc:[4,8], int:[4,6], rea:[3,4], del:[2,8] },
+        rest: { acc:120, int:150, rea:180, del:90 },
+        cue: "360° brace, neutral spine, bar drags down legs. Hinge at hip, not waist. Feel hamstring stretch at bottom.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-barbell-romanian-deadlift-front.gif",
+        yt: "https://www.youtube.com/results?search_query=Romanian+Deadlift+technique+form"
+      },
+      {
+        name: "Goblet Squat (heel wedge if needed)",
+        phases: { acc:[3,10], int:[4,8], rea:[4,6], del:[2,10] },
+        rest: { acc:90, int:120, rea:150, del:60 },
+        cue: "⚠️ ANKLE: Goblet squat is ankle-safe alternative to front squat. Hold dumbbell at chest. Knees track toes. Heel wedge optional. Upright torso.",
+        warning: true,
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-dumbbell-goblet-squat-front.gif",
+        yt: "https://www.youtube.com/results?search_query=goblet+squat+technique+ankle+mobility"
+      },
+      {
+        name: "Barbell Hip Thrust",
+        phases: { acc:[3,12], int:[3,10], rea:[3,8], del:[2,12] },
+        rest: { acc:90, int:90, rea:120, del:60 },
+        cue: "Pad on hip crease. Drive through heels. Peak glute squeeze at top — hold 1 second. Chin tucked, ribs down.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-barbell-hip-thrust-side.gif",
+        yt: "https://www.youtube.com/results?search_query=barbell+hip+thrust+technique"
+      },
+      {
+        name: "Bulgarian Split Squat",
+        phases: { acc:[3,10], int:[3,8], rea:[4,6], del:[2,10] },
+        rest: { acc:90, int:120, rea:150, del:60 },
+        cue: "⚠️ ANKLE: Front foot flat, monitor medial arch — do NOT let ankle collapse inward (protects deltoid ligament). Drive from front heel.",
+        warning: true,
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-dumbbell-bulgarian-split-squat-front.gif",
+        yt: "https://www.youtube.com/results?search_query=Bulgarian+split+squat+technique"
+      },
+      {
+        name: "Tibialis Anterior Raise 🦶",
+        phases: { acc:[3,15], int:[3,15], rea:[3,15], del:[2,15] },
+        rest: { acc:45, int:45, rea:45, del:30 },
+        cue: "🔵 REHAB: Stand with back against wall, heels 30cm from wall. Lift toes/forefoot as high as possible. Slow and controlled. Strengthens deltoid ligament support muscles.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/male-bodyweight-tibialis-raise-side.gif",
+        yt: "https://www.youtube.com/results?search_query=tibialis+anterior+raise+ankle+strengthening"
+      },
+      {
+        name: "Standing Calf Raise (full ROM)",
+        phases: { acc:[3,15], int:[4,12], rea:[4,10], del:[2,15] },
+        rest: { acc:60, int:60, rea:60, del:45 },
+        cue: "Full range: deep stretch at bottom, full contraction at top. Slow eccentric (3 sec down). Strengthens gastrocnemius — supports ankle stability.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-machine-calf-raise-side.gif",
+        yt: "https://www.youtube.com/results?search_query=standing+calf+raise+technique"
+      }
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // DAY 2 — UPPER A: Pull-focused
+  // No changes to exercises, corrected sets/reps progression
+  // ═══════════════════════════════════════════════════════
+  {
+    id: "upperA",
+    name: "Upper A",
+    subtitle: "Pull-focused",
+    warmup: "Elliptical/rowing 5 min → Shoulder circles → Band pull-aparts 2×15 → Face pull light 2×15 → Scapular retractions (8-10 min)",
+    exercises: [
+      {
+        name: "Pull-ups / Lat Pulldown",
+        phases: { acc:[4,8], int:[4,6], rea:[4,5], del:[3,8] },
+        rest: { acc:120, int:150, rea:180, del:90 },
+        cue: "Full dead hang at bottom. Initiate with scapular depression. Drive elbows to hips. Chest toward bar at top.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-machine-lat-pulldown-front.gif",
+        yt: "https://www.youtube.com/results?search_query=lat+pulldown+technique+form"
+      },
+      {
+        name: "Seated Cable Row",
+        phases: { acc:[3,12], int:[3,10], rea:[4,8], del:[2,12] },
+        rest: { acc:90, int:90, rea:120, del:60 },
+        cue: "Sit tall. Pull to lower sternum. Squeeze shoulder blades at end. Controlled 3-second return. Do NOT round lower back.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-cable-seated-row-side.gif",
+        yt: "https://www.youtube.com/results?search_query=seated+cable+row+technique"
+      },
+      {
+        name: "Dumbbell Single-Arm Row",
+        phases: { acc:[3,10], int:[3,8], rea:[4,6], del:[2,10] },
+        rest: { acc:90, int:90, rea:120, del:60 },
+        cue: "Bench support. Elbow drives straight back — not flared. Full stretch at bottom. Row to hip, not shoulder.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-dumbbell-single-arm-row-side.gif",
+        yt: "https://www.youtube.com/results?search_query=dumbbell+row+technique"
+      },
+      {
+        name: "Face Pull",
+        phases: { acc:[3,15], int:[3,15], rea:[3,12], del:[2,15] },
+        rest: { acc:60, int:60, rea:60, del:45 },
+        cue: "Cable at forehead height. Pull to face with external rotation — thumbs behind ears. Protects rotator cuff. Never skip this.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/male-cable-face-pull-side.gif",
+        yt: "https://www.youtube.com/results?search_query=face+pull+technique+external+rotation"
+      },
+      {
+        name: "Reverse Fly / Band Pull-Apart",
+        phases: { acc:[3,15], int:[3,15], rea:[3,15], del:[2,15] },
+        rest: { acc:45, int:45, rea:45, del:30 },
+        cue: "Light weight. Rear delt focus. Arms slightly bent. Squeeze at end position. Postural muscle — high reps, never heavy.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-dumbbell-reverse-fly-side.gif",
+        yt: "https://www.youtube.com/results?search_query=reverse+fly+rear+delt+technique"
+      }
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // DAY 3 — LOWER B: Quad-dominant + Ankle Stability
+  // Key changes: Added Peroneal Strengthening (eversion),
+  // Ankle Dorsiflexion Mobility, corrected sets/reps
+  // ═══════════════════════════════════════════════════════
+  {
+    id: "lowerB",
+    name: "Lower B",
+    subtitle: "Quad-dominant + Ankle Stability",
+    warmup: "⚠️ ANKLE PROTOCOL: Banded ankle eversion 2×15 → Half-kneeling dorsiflexion wall drill 2×10 each → Leg swings → Walking lunges 10 reps → Bodyweight squat 10 reps (8-10 min)",
+    exercises: [
+      {
+        name: "Leg Press",
+        phases: { acc:[4,10], int:[4,8], rea:[3,6], del:[2,10] },
+        rest: { acc:120, int:150, rea:180, del:90 },
+        cue: "⚠️ ANKLE: Feet shoulder-width, flat on platform. Do NOT let heels rise. Lower to 90° knee angle max. Controlled descent.",
+        warning: true,
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-machine-leg-press-side.gif",
+        yt: "https://www.youtube.com/results?search_query=leg+press+technique+foot+position"
+      },
+      {
+        name: "Hack Squat / Smith Machine Squat",
+        phases: { acc:[3,10], int:[4,8], rea:[4,6], del:[2,10] },
+        rest: { acc:90, int:120, rea:150, del:60 },
+        cue: "⚠️ ANKLE: Safer quad squat than front squat — less dorsiflexion demand. Feet slightly forward. Upright torso. Monitor ankle alignment.",
+        warning: true,
+        gif: "https://musclewiki.com/media/uploads/videos/branded/male-machine-hack-squat-side.gif",
+        yt: "https://www.youtube.com/results?search_query=hack+squat+technique+form"
+      },
+      {
+        name: "Lying Leg Curl",
+        phases: { acc:[3,12], int:[3,10], rea:[4,8], del:[2,12] },
+        rest: { acc:90, int:90, rea:90, del:60 },
+        cue: "Hips pressed into pad. Full range of motion. Slow 3-second eccentric. Plantarflex foot at top for peak contraction.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-machine-lying-leg-curl-side.gif",
+        yt: "https://www.youtube.com/results?search_query=lying+leg+curl+technique"
+      },
+      {
+        name: "Banded Ankle Eversion 🦶",
+        phases: { acc:[3,15], int:[3,15], rea:[3,15], del:[2,15] },
+        rest: { acc:45, int:45, rea:45, del:30 },
+        cue: "🔵 REHAB: Sit, band around foot. Rotate foot outward (eversion) against resistance. Slow and controlled. Strengthens peroneal muscles — primary deltoid ligament support. Both feet.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/male-resistance-band-ankle-eversion-side.gif",
+        yt: "https://www.youtube.com/results?search_query=ankle+eversion+band+exercise+peroneal+strengthening"
+      },
+      {
+        name: "Single-Leg Balance Progression 🦶",
+        phases: { acc:[3,30], int:[3,30], rea:[3,30], del:[2,30] },
+        rest: { acc:30, int:30, rea:30, del:30 },
+        cue: "🔵 REHAB (seconds, not reps): Week 1-4: flat floor. Week 5-8: eyes closed. Week 9-11: foam pad. Week 12: flat. Proprioception training — critical for deltoid ligament recovery.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/male-bodyweight-single-leg-balance-side.gif",
+        yt: "https://www.youtube.com/results?search_query=single+leg+balance+proprioception+ankle+stability"
+      },
+      {
+        name: "Seated Calf Raise (Soleus focus)",
+        phases: { acc:[3,15], int:[4,12], rea:[4,10], del:[2,15] },
+        rest: { acc:60, int:60, rea:60, del:45 },
+        cue: "Knee bent 90° — targets soleus (different from standing). Full range. Slow eccentric. Soleus is primary ankle stabilizer.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-machine-seated-calf-raise-side.gif",
+        yt: "https://www.youtube.com/results?search_query=seated+calf+raise+soleus+technique"
+      }
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // DAY 4 — UPPER B: Push-focused
+  // Corrected shoulder warnings, added Pallof Press (core stability)
+  // ═══════════════════════════════════════════════════════
+  {
+    id: "upperB",
+    name: "Upper B",
+    subtitle: "Push-focused",
+    warmup: "Elliptical 5 min → Band pull-aparts 2×15 → Shoulder CARs (controlled articular rotations) → Wall slides 10 reps → Light DB press warm-up (8-10 min)",
+    exercises: [
+      {
+        name: "Barbell Bench Press",
+        phases: { acc:[4,8], int:[4,6], rea:[3,4], del:[3,8] },
+        rest: { acc:120, int:150, rea:180, del:90 },
+        cue: "⚠️ SHOULDER: Controlled 2-sec descent. Touch chest lightly — NO bounce. Drive feet into floor. NO elbow lockout at top. Scapulae retracted throughout.",
+        warning: true,
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-barbell-bench-press-side.gif",
+        yt: "https://www.youtube.com/results?search_query=bench+press+technique+shoulder+safety"
+      },
+      {
+        name: "Seated Dumbbell Shoulder Press",
+        phases: { acc:[3,10], int:[3,8], rea:[3,6], del:[2,10] },
+        rest: { acc:90, int:120, rea:150, del:60 },
+        cue: "⚠️ SHOULDER: Stop 10-15° before full lockout. Elbows at 45° angle (not flared). Controlled descent. Neutral grip option if shoulder discomfort.",
+        warning: true,
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-dumbbell-shoulder-press-front.gif",
+        yt: "https://www.youtube.com/results?search_query=seated+dumbbell+press+technique+shoulder+safe"
+      },
+      {
+        name: "Incline Dumbbell Press",
+        phases: { acc:[3,10], int:[3,8], rea:[4,6], del:[2,10] },
+        rest: { acc:90, int:90, rea:120, del:60 },
+        cue: "30-45° incline. Upper chest focus. Controlled descent — 2 seconds down. Elbows at 45°. Safer shoulder angle than flat press.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-dumbbell-incline-press-side.gif",
+        yt: "https://www.youtube.com/results?search_query=incline+dumbbell+press+technique"
+      },
+      {
+        name: "Dumbbell Lateral Raise",
+        phases: { acc:[3,15], int:[3,12], rea:[3,12], del:[2,15] },
+        rest: { acc:60, int:60, rea:60, del:45 },
+        cue: "Slight forward lean. Lead with elbows, not hands. Stop at shoulder height — going higher impinges. Slow eccentric. Light weight, high quality.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/female-dumbbell-lateral-raise-front.gif",
+        yt: "https://www.youtube.com/results?search_query=lateral+raise+technique+shoulder+safe"
+      },
+      {
+        name: "Pallof Press (Anti-Rotation Core)",
+        phases: { acc:[3,12], int:[3,12], rea:[3,10], del:[2,12] },
+        rest: { acc:60, int:60, rea:60, del:45 },
+        cue: "Cable at chest height, stand sideways. Press out and hold 2 sec. Resist rotation. Core braced. Builds spinal stability — supports all compound lifts.",
+        gif: "https://musclewiki.com/media/uploads/videos/branded/male-cable-pallof-press-side.gif",
+        yt: "https://www.youtube.com/results?search_query=pallof+press+anti+rotation+core+technique"
+      }
+    ]
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let S = JSON.parse(localStorage.getItem("yael_v3")) || {
+  week: 1,
+  logs: {},      // key: "w{week}_{dayId}_{exIdx}_{setIdx}" => {kg, reps, rpe}
+  history: [],   // [{week, dayId, dayName, date, ts, sets, avgRPE, tonnage, notes, checkin}]
+  streak: 0,
+  lastWorkoutDate: null
+};
+
+let currentDayIdx = null;
+let currentWorkoutStart = null;
+let timerSec = 0;
+let timerInterval = null;
+let timerPaused = false;
+
+function save() {
+  localStorage.setItem("yael_v3", JSON.stringify(S));
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function nav(screen) {
+  // Stop timer when leaving workout screen
+  if (screen !== "workout") {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    const tb = document.getElementById("timer-bar");
+    if (tb) tb.classList.remove("active");
+  }
+  document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+  document.getElementById("screen-" + screen).classList.add("active");
+  const nb = document.getElementById("nav-" + screen);
+  if (nb) nb.classList.add("active");
+
+  if (screen === "home") renderHome();
+  else if (screen === "workout") renderWorkout();
+  else if (screen === "history") renderHistory();
+  else if (screen === "calendar") renderCalendar();
+  else if (screen === "progress") renderProgress();
+
+  updateHeader();
+}
+
+function updateHeader() {
+  const ph = getPhase(S.week);
+  document.getElementById("header-badge").textContent = `Week ${S.week} · ${ph.name}`;
+}
+
+// ============================================================
+// HOME
+// ============================================================
+function renderHome() {
+  const ph = getPhase(S.week);
+  let html = "";
+
+  // Week nav
+  html += `<div class="week-nav">
+    <button onclick="changeWeek(-1)">◀</button>
+    <div class="week-nav-info">
+      <div class="wn-week">Week ${S.week} / 12</div>
+      <div class="wn-phase">${ph.name}</div>
+    </div>
+    <button onclick="changeWeek(1)">▶</button>
+  </div>`;
+
+  // Streak
+  html += `<div class="streak-bar">
+    <span class="streak-fire">🔥</span>
+    <div>
+      <div class="streak-val">${S.streak}</div>
+      <div class="streak-label">workout streak</div>
+    </div>
+  </div>`;
+
+  // Medical warnings
+  html += `<div class="med-warning">
+    <b>⚠️ Medical Notes</b>
+    • Ankle dorsiflexion limitation — use heel wedges for squats<br>
+    • Deltoid ligament (foot) — avoid ankle valgus/pronation. Rehab exercises added: Tibialis Raise, Banded Eversion, Single-Leg Balance in every lower body session
+  </div>`;
+
+  // Phase banner
+  html += `<div class="phase-banner ${ph.cls}">
+    <b>${ph.name} Phase · RPE ${ph.rpe}</b>
+    ${ph.desc}<br>
+    <span style="color:var(--accent);font-size:0.85rem">💡 ${ph.tip}</span>
+  </div>`;
+
+  // Day cards
+  html += `<div class="section-title">Training Days</div>`;
+  DAYS.forEach((day, i) => {
+    const done = isDayDone(S.week, day.id);
+    html += `<div class="card" style="${done ? "border-left:3px solid var(--green)" : ""}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="card-title">${done ? "✅ " : ""}${day.name}</div>
+          <div class="card-sub">${day.subtitle}</div>
+        </div>
+        <button class="btn btn-primary" style="width:auto;padding:8px 16px;margin:0"
+          onclick="openWorkout(${i})">Start</button>
+      </div>
+    </div>`;
+  });
+
+  // Reset button
+  html += `<button class="btn btn-outline" onclick="resetConfirm()" style="margin-top:20px">🗑 Reset All Progress</button>`;
+
+  document.getElementById("screen-home").innerHTML = html;
+}
+
+function changeWeek(d) {
+  S.week = Math.max(1, Math.min(12, S.week + d));
+  save();
+  renderHome();
+  updateHeader();
+}
+
+function isDayDone(week, dayId) {
+  return S.history.some(h => h.week === week && h.dayId === dayId);
+}
+
+function resetConfirm() {
+  if (confirm("Reset ALL progress? This cannot be undone.")) {
+    S = { week:1, logs:{}, history:[], streak:0, lastWorkoutDate:null };
+    save();
+    nav("home");
+  }
+}
+
+// ============================================================
+// WORKOUT
+// ============================================================
+function openWorkout(dayIdx) {
+  currentDayIdx = dayIdx;
+  currentWorkoutStart = Date.now();
+  nav("workout");
+}
+
+function renderWorkout() {
+  if (currentDayIdx === null) {
+    document.getElementById("screen-workout").innerHTML = `<p style="color:var(--muted);text-align:center;margin-top:40px">No workout selected</p>`;
+    return;
+  }
+
+  const day = DAYS[currentDayIdx];
+  const ph = getPhase(S.week);
+  const phKey = ph.cls === "acc" ? "acc" : ph.cls === "int" ? "int" : ph.cls === "rea" ? "rea" : "del";
+
+  let html = `<button class="btn btn-outline" onclick="nav('home')" style="margin-bottom:12px">← Back</button>`;
+  html += `<h2 style="margin-bottom:4px">${day.name}</h2>`;
+  html += `<p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px">${day.subtitle}</p>`;
+
+  // Phase banner
+  html += `<div class="phase-banner ${ph.cls}">
+    <b>${ph.name} · RPE ${ph.rpe}</b>
+    ${ph.desc}
+  </div>`;
+
+  // Warmup
+  html += `<div class="card" style="border-left:3px solid var(--accent2)">
+    <div class="card-title">🔥 Warm-up</div>
+    <div class="card-sub" style="margin-top:4px">${day.warmup}</div>
+  </div>`;
+
+  // Exercises
+  html += `<div class="section-title">Exercises</div>`;
+  day.exercises.forEach((ex, ei) => {
+    const [sets, reps] = ex.phases[phKey];
+    const rest = ex.rest[phKey];
+
+    html += `<div class="ex-card" id="ex-${ei}">
+      <div class="ex-header" onclick="toggleEx(${ei})">
+        <div>
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-meta">${sets} sets × ${reps} reps · Rest ${rest}s · RPE ${ph.rpe}</div>
+          ${ex.warning ? `<div class="ex-warning">⚠️ Medical attention required</div>` : ""}
+        </div>
+        <span style="color:var(--muted);font-size:1.2rem" id="ex-arrow-${ei}">▼</span>
+      </div>
+      <div class="ex-body" id="ex-body-${ei}">
+        <p style="color:var(--accent);font-size:0.85rem;margin:8px 0">💡 ${ex.cue}</p>
+        <div style="display:grid;grid-template-columns:30px 1fr 1fr 80px;gap:4px;margin-bottom:4px">
+          <span></span>
+          <span style="color:var(--muted);font-size:0.75rem;text-align:center">Weight (kg)</span>
+          <span style="color:var(--muted);font-size:0.75rem;text-align:center">Reps</span>
+          <span style="color:var(--muted);font-size:0.75rem;text-align:center">RPE</span>
+        </div>`;
+
+    for (let si = 0; si < sets; si++) {
+      const logKey = `w${S.week}_${day.id}_${ei}_${si}`;
+      const prevKey = `w${S.week - 1}_${day.id}_${ei}_${si}`;
+      const saved = S.logs[logKey] || {};
+      const prev = S.logs[prevKey];
+      const prevHint = prev && prev.kg ? `prev: ${prev.kg}kg×${prev.reps}` : "";
+
+      html += `<div class="set-row">
+        <span class="set-num">${si + 1}</span>
+        <div>
+          <input type="number" placeholder="kg" id="kg_${ei}_${si}"
+            value="${saved.kg || ""}" inputmode="decimal">
+          ${prevHint ? `<div class="set-prev">${prevHint}</div>` : ""}
+        </div>
+        <input type="number" placeholder="${reps}" id="reps_${ei}_${si}"
+          value="${saved.reps || ""}" inputmode="numeric">
+        <select id="rpe_${ei}_${si}">
+          <option value="">RPE</option>
+          ${[5,6,7,8,9,10].map(r => `<option value="${r}" ${saved.rpe == r ? "selected" : ""}>${r}</option>`).join("")}
+        </select>
+      </div>
+      <div style="text-align:right;margin-bottom:4px">
+        <button class="rest-btn" onclick="startTimer(${rest})">⏱ Rest ${rest}s</button>
+      </div>`;
+    }
+
+    html += `<button class="demo-toggle" onclick="toggleDemo(${ei})">🎬 Show Technique Demo</button>
+      <div class="demo-box" id="demo-${ei}">
+        <img src="${ex.gif}" alt="${ex.name}" onerror="this.style.display='none'">
+        <a href="${ex.yt}" target="_blank">▶ Watch on YouTube</a>
+      </div>
+      </div>
+    </div>`;
+  });
+
+  // Notes
+  html += `<div class="section-title">Workout Notes</div>
+  <textarea class="notes-area" id="workout-notes" placeholder="How did it go? Any notes...">${getWorkoutNotes()}</textarea>`;
+
+  // Check-in
+  html += `<div class="section-title">Post-Workout Check-In</div>
+  <div class="card">`;
+
+  const checkins = [
+    { id:"energy", label:"⚡ Energy", opts:["😴","😐","😊","💪","🚀"] },
+    { id:"mood", label:"😊 Mood", opts:["😞","😐","🙂","😄","🤩"] },
+    { id:"soreness", label:"🦵 Soreness", opts:["✅","😐","😬","😣","🔴"] },
+    { id:"sleep", label:"😴 Sleep", opts:["😤","😐","🙂","😊","⭐"] },
+    { id:"workoutFeel", label:"🎯 Workout Feel", opts:["💀","😐","👍","🏆","🔥"] }
+  ];
+
+  const savedCheckin = getWorkoutCheckin();
+  checkins.forEach(c => {
+    html += `<div class="checkin-row">
+      <span class="checkin-label">${c.label}</span>
+      <div class="emoji-group">
+        ${c.opts.map((e, i) => `<button class="emoji-btn ${savedCheckin[c.id] == i ? "selected" : ""}"
+          onclick="selectCheckin('${c.id}', ${i}, this)">${e}</button>`).join("")}
+      </div>
+    </div>`;
+  });
+
+  html += `<div style="margin-top:8px">
+    <label style="color:var(--muted);font-size:0.85rem">Pain/Discomfort location (if any):</label>
+    <input type="text" id="pain-loc" placeholder="e.g. left knee"
+      style="background:var(--surface2);border:none;border-radius:8px;color:var(--text);padding:8px;width:100%;margin-top:4px"
+      value="${savedCheckin.pain || ""}">
+  </div>
+  </div>`;
+
+  // Finish
+  html += `<button class="btn btn-success" onclick="finishWorkout()" id="finish-btn" style="margin-top:16px">✅ Finish Workout</button>`;
+
+  document.getElementById("screen-workout").innerHTML = html;
+}
+
+function toggleEx(i) {
+  const body = document.getElementById(`ex-body-${i}`);
+  const arrow = document.getElementById(`ex-arrow-${i}`);
+  body.classList.toggle("open");
+  arrow.textContent = body.classList.contains("open") ? "▲" : "▼";
+}
+
+function toggleDemo(i) {
+  document.getElementById(`demo-${i}`).classList.toggle("open");
+}
+
+// Checkin state (temp, per workout session)
+let checkinState = {};
+
+function getWorkoutCheckin() {
+  if (!currentDayIdx === null) return {};
+  const day = DAYS[currentDayIdx];
+  const key = `checkin_${S.week}_${day ? day.id : ""}`;
+  return JSON.parse(localStorage.getItem(key) || "{}");
+}
+
+function getWorkoutNotes() {
+  if (currentDayIdx === null) return "";
+  const day = DAYS[currentDayIdx];
+  const key = `notes_${S.week}_${day.id}`;
+  return localStorage.getItem(key) || "";
+}
+
+function selectCheckin(field, val, btn) {
+  checkinState[field] = val;
+  // Update UI
+  btn.closest(".emoji-group").querySelectorAll(".emoji-btn").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer(sec) {
+  timerSec = sec;
+  timerPaused = false;
+  clearInterval(timerInterval);
+  document.getElementById("timer-bar").classList.add("active");
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    if (!timerPaused) {
+      timerSec--;
+      updateTimerDisplay();
+      if (timerSec <= 0) {
+        timerStop();
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      }
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  document.getElementById("timer-text").textContent = `⏱ Rest: ${timerSec}s`;
+  const bar = document.getElementById("timer-bar");
+  bar.style.background = timerSec <= 10 ? "#ef4444" : timerSec <= 30 ? "#f59e0b" : "#3b82f6";
+}
+
+function timerAdj(d) {
+  timerSec = Math.max(0, timerSec + d);
+  updateTimerDisplay();
+}
+
+function timerStop() {
+  clearInterval(timerInterval);
+  document.getElementById("timer-bar").classList.remove("active");
+}
+
+// ============================================================
+// FINISH WORKOUT
+// ============================================================
+function finishWorkout() {
+  const day = DAYS[currentDayIdx];
+  const ph = getPhase(S.week);
+  const phKey = ph.cls === "acc" ? "acc" : ph.cls === "int" ? "int" : ph.cls === "rea" ? "rea" : "del";
+
+  let totalRPE = 0, rpeCount = 0, tonnage = 0, totalSets = 0;
+
+  day.exercises.forEach((ex, ei) => {
+    const [sets] = ex.phases[phKey];
+    for (let si = 0; si < sets; si++) {
+      const logKey = `w${S.week}_${day.id}_${ei}_${si}`;
+      const kgEl = document.getElementById(`kg_${ei}_${si}`);
+      const repsEl = document.getElementById(`reps_${ei}_${si}`);
+      const rpeEl = document.getElementById(`rpe_${ei}_${si}`);
+
+      if (!kgEl) continue;
+
+      const kg = parseFloat(kgEl.value) || 0;
+      const reps = parseInt(repsEl.value) || 0;
+      const rpe = parseInt(rpeEl.value) || 0;
+
+      S.logs[logKey] = { kg, reps, rpe };
+
+      if (rpe > 0) { totalRPE += rpe; rpeCount++; }
+      if (kg > 0 && reps > 0) { tonnage += kg * reps; totalSets++; }
+    }
+  });
+
+  const avgRPE = rpeCount > 0 ? (totalRPE / rpeCount).toFixed(1) : null;
+  const notes = document.getElementById("workout-notes")?.value || "";
+  const painLoc = document.getElementById("pain-loc")?.value || "";
+
+  // Save notes
+  localStorage.setItem(`notes_${S.week}_${day.id}`, notes);
+
+  // Save checkin
+  checkinState.pain = painLoc;
+  localStorage.setItem(`checkin_${S.week}_${day.id}`, JSON.stringify(checkinState));
+
+  // Update streak
+  const today = new Date().toDateString();
+  if (S.lastWorkoutDate !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    S.streak = S.lastWorkoutDate === yesterday ? S.streak + 1 : 1;
+    S.lastWorkoutDate = today;
+  }
+
+  // Check if already logged today for this day
+  const alreadyLogged = S.history.findIndex(h => h.week === S.week && h.dayId === day.id);
+  const entry = {
+    week: S.week,
+    dayId: day.id,
+    dayName: day.name,
+    date: new Date().toLocaleDateString(),
+    ts: Date.now(),
+    sets: totalSets,
+    avgRPE,
+    tonnage: Math.round(tonnage),
+    notes,
+      setsLog: Object.entries(S.logs).filter(([k]) => k.startsWith(`w${S.week}_${day.id}_`)).map(([k,v]) => v),
+    checkin: { ...checkinState, pain: painLoc }
+  };
+
+  if (alreadyLogged >= 0) {
+    S.history[alreadyLogged] = entry; // update, don't duplicate
+  } else {
+    S.history.push(entry);
+  }
+
+  save();
+  timerStop();
+  checkinState = {};
+  currentDayIdx = null;
+
+  // Show summary
+  alert(`✅ Workout complete!\n\n📊 Sets logged: ${totalSets}\n⚖️ Tonnage: ${tonnage.toFixed(0)} kg\n🎯 Avg RPE: ${avgRPE || "—"}`);
+  nav("home");
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function renderHistory() {
+  const hist = [...S.history].sort((a, b) => b.ts - a.ts);
+  let html = `<h2 style="margin-bottom:14px">History</h2>`;
+
+  if (!hist.length) {
+    html += `<p style="color:var(--muted);text-align:center;margin-top:40px">No workouts yet. Start training! 💪</p>`;
+  } else {
+    hist.forEach(h => {
+      html += `<div class="hist-item">
+        <div class="hist-header">
+          <span class="hist-day">${h.dayName}</span>
+          <span class="hist-date">Week ${h.week} · ${h.date}</span>
+        </div>
+        <div class="hist-stats">
+          ${h.sets ? `<span class="hist-stat">📦 ${h.sets} sets</span>` : ""}
+          ${h.tonnage ? `<span class="hist-stat">⚖️ ${h.tonnage} kg</span>` : ""}
+          ${h.avgRPE ? `<span class="hist-stat hist-rpe">🎯 RPE ${h.avgRPE}</span>` : ""}
+        </div>
+        ${h.notes ? `<p style="color:var(--muted);font-size:0.82rem;margin-top:6px">📝 ${h.notes}</p>` : ""}
+      </div>`;
+    });
+  }
+
+  document.getElementById("screen-history").innerHTML = html;
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function renderCalendar() {
+  let html = `<h2 style="margin-bottom:14px">12-Week Calendar</h2>`;
+
+  for (let w = 1; w <= 12; w++) {
+    const ph = getPhase(w);
+    const tagCls = `tag-${ph.cls}`;
+    const weekHist = S.history.filter(h => h.week === w);
+    const doneCount = weekHist.length;
+    const perc = Math.round((doneCount / 4) * 100);
+    const avgRPE = weekHist.length
+      ? (weekHist.reduce((s, h) => s + (parseFloat(h.avgRPE) || 0), 0) / weekHist.filter(h => h.avgRPE).length || 0).toFixed(1)
+      : null;
+
+    html += `<div class="cal-week" ${w === S.week ? "style=\"border:1px solid var(--accent)\""  : ""}>
+      <div class="cal-week-header">
+        <span class="cal-week-title" onclick="jumpToWeek(${w})" style="cursor:pointer">
+          Week ${w} ${w === S.week ? "← current" : ""}
+        </span>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${avgRPE && avgRPE > 0 ? `<span style="color:var(--yellow);font-size:0.8rem">RPE ${avgRPE}</span>` : ""}
+          <span class="cal-phase-tag ${tagCls}">${ph.name}</span>
+          <span style="color:var(--green);font-size:0.8rem">${perc}%</span>
+        </div>
+      </div>
+      <div class="cal-days">`;
+
+    DAYS.forEach(day => {
+      const done = S.history.find(h => h.week === w && h.dayId === day.id);
+      html += `<div class="cal-day ${done ? "done" : ""} ${w === S.week ? "current" : ""}">
+        <div class="cal-day-name">${day.name.replace(" ", "\n")}</div>
+        ${done ? `<div style="color:var(--green);font-size:0.8rem">✓</div>` : `<div style="color:var(--muted);font-size:0.8rem">—</div>`}
+        ${done && done.avgRPE ? `<div class="cal-day-rpe">RPE ${done.avgRPE}</div>` : ""}
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  }
+
+  document.getElementById("screen-calendar").innerHTML = html;
+}
+
+function jumpToWeek(w) {
+  S.week = w;
+  save();
+  nav("home");
+}
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function renderProgress() {
+  const totalWorkouts = S.history.length;
+  const totalSets = S.history.reduce((s, h) => s + (h.sets || 0), 0);
+  const totalTonnage = S.history.reduce((s, h) => s + (h.tonnage || 0), 0);
+
+  let html = `<h2 style="margin-bottom:14px">Progress</h2>`;
+
+  html += `<div class="stat-grid">
+    <div class="stat-box"><div class="stat-val">${totalWorkouts}</div><div class="stat-label">Workouts</div></div>
+    <div class="stat-box"><div class="stat-val">${S.streak}</div><div class="stat-label">🔥 Streak</div></div>
+    <div class="stat-box"><div class="stat-val">${totalSets}</div><div class="stat-label">Total Sets</div></div>
+    <div class="stat-box"><div class="stat-val">${(totalTonnage/1000).toFixed(1)}t</div><div class="stat-label">Total Volume</div></div>
+  </div>`;
+
+  // Exercise selector for chart
+  html += `<div class="section-title">Weight Progress</div>
+  <select id="prog-ex-sel" onchange="renderChart()"
+    style="background:var(--surface);border:1px solid var(--surface2);border-radius:8px;color:var(--text);padding:8px;width:100%;margin-bottom:10px">`;
+
+  DAYS.forEach(day => {
+    day.exercises.forEach((ex, ei) => {
+      html += `<option value="${day.id}_${ei}">${ex.name}</option>`;
+    });
+  });
+
+  html += `</select>
+  <canvas id="prog-chart" height="200"></canvas>`;
+
+  // RPE trend
+  html += `<div class="section-title">RPE Trend</div>
+  <canvas id="rpe-chart" height="150"></canvas>`;
+
+  document.getElementById("screen-progress").innerHTML = html;
+
+  renderChart();
+  renderRPEChart();
+}
+
+function renderChart() {
+  const sel = document.getElementById("prog-ex-sel");
+  if (!sel) return;
+  const [dayId, eiStr] = sel.value.split("_");
+  const ei = parseInt(eiStr);
+  const day = DAYS.find(d => d.id === dayId);
+  if (!day) return;
+
+  const ph = getPhase(S.week);
+  const phKey = ph.cls === "acc" ? "acc" : ph.cls === "int" ? "int" : ph.cls === "rea" ? "rea" : "del";
+  const [sets] = day.exercises[ei].phases[phKey];
+
+  // Collect data: max weight per week
+  const data = [];
+  for (let w = 1; w <= 12; w++) {
+    let maxKg = 0;
+    for (let si = 0; si < 6; si++) {
+      const log = S.logs[`w${w}_${dayId}_${ei}_${si}`];
+      if (log && log.kg > maxKg) maxKg = log.kg;
+    }
+    if (maxKg > 0) data.push({ w, kg: maxKg });
+  }
+
+  drawLineChart("prog-chart", data.map(d => `W${d.w}`), data.map(d => d.kg), "kg", "#38bdf8");
+}
+
+function renderRPEChart() {
+  const data = S.history.filter(h => h.avgRPE).map(h => ({ label: `W${h.week}`, val: parseFloat(h.avgRPE) }));
+  drawLineChart("rpe-chart", data.map(d => d.label), data.map(d => d.val), "RPE", "#fbbf24");
+}
+
+function drawLineChart(canvasId, labels, values, unit, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const W = canvas.offsetWidth || 380;
+  const H = canvas.height;
+  canvas.width = W;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(0, 0, W, H);
+
+  if (!values.length) {
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "14px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("No data yet", W/2, H/2);
+    return;
+  }
+
+  const pad = { top:20, right:20, bottom:30, left:40 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+  const minV = Math.min(...values) * 0.9;
+  const maxV = Math.max(...values) * 1.1;
+
+  const xStep = labels.length > 1 ? cW / (labels.length - 1) : cW;
+
+  // Grid
+  ctx.strokeStyle = "#2d3f55";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (cH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + cW, y);
+    ctx.stroke();
+    const val = maxV - ((maxV - minV) / 4) * i;
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "10px Arial";
+    ctx.textAlign = "right";
+    ctx.fillText(val.toFixed(0), pad.left - 4, y + 4);
+  }
+
+  // Line
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    const x = pad.left + i * xStep;
+    const y = pad.top + cH - ((v - minV) / (maxV - minV)) * cH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Dots + labels
+  values.forEach((v, i) => {
+    const x = pad.left + i * xStep;
+    const y = pad.top + cH - ((v - minV) / (maxV - minV)) * cH;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = "10px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(labels[i], x, H - 8);
+  });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+updateHeader();
+renderHome();
+
+// ── TOAST ──────────────────────────────────────────────────
+function toast(msg, duration=2500) {
+  let t = document.getElementById("toast-msg");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "toast-msg";
+    t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = "1";
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = "0"; }, duration);
+}
+
+
+// ── GOOGLE CALENDAR SYNC ────────────────────────────────────
+function syncToGoogleCalendar() {
+  const day = DAYS[currentDayIdx];
+  if (!day) { toast("No workout selected"); return; }
+
+  const now = new Date();
+  const dateStr = now.toISOString().replace(/-|:|\.\d{3}/g, "").slice(0, 15) + "Z";
+  const endDate = new Date(now.getTime() + 90 * 60000);
+  const endStr = endDate.toISOString().replace(/-|:|\.\d{3}/g, "").slice(0, 15) + "Z";
+
+  const title = encodeURIComponent(`${day.name} - Week ${S.week} (Yael)`);
+  const details = encodeURIComponent(`Phase: ${getPhase(S.week).name}\nCoach: Alexey Rudchenko`);
+
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${endStr}&details=${details}`;
+  window.open(url, "_blank");
+  toast("Opening Google Calendar...");
+}
+
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"f0f03d0605bf45f1a3b17cf7d5e6861f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
